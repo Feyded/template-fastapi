@@ -81,7 +81,7 @@ This applies all existing database migrations.
 ## 6. Start the Development Server
 
 ```bash
-uv run python -m fastapi dev src/app/main.py
+uv run fastapi dev
 ```
 
 Replace the file path with the actual location of your FastAPI application's `main.py`.
@@ -93,16 +93,16 @@ Open the API documentation:
 
 ## Useful Commands
 
-| Command                                                             | Purpose                      |
-| ------------------------------------------------------------------- | ---------------------------- |
-| `uv sync`                                                           | Install project dependencies |
-| `uv add package-name`                                               | Add a dependency             |
-| `uv remove package-name`                                            | Remove a dependency          |
-| `uv run python -m fastapi dev src/app/main.py`                      | Start the development server |
-| `uv run python -m fastapi run src/app/main.py`                      | Start the production server  |
-| `uv run python -m alembic upgrade head`                             | Apply database migrations    |
-| `uv run python -m alembic revision --autogenerate -m "description"` | Generate a migration         |
-| `uv lock`                                                           | Update the lockfile          |
+| Command                                                   | Purpose                      |
+| --------------------------------------------------------- | ---------------------------- |
+| `uv sync`                                                 | Install project dependencies |
+| `uv add package-name`                                     | Add a dependency             |
+| `uv remove package-name`                                  | Remove a dependency          |
+| `uv run fastapi dev`                                      | Start the development server |
+| `uv run fastapi run`                                      | Start the production server  |
+| `uv run alembic upgrade head`                             | Apply database migrations    |
+| `uv run alembic revision --autogenerate -m "description"` | Generate a migration         |
+| `uv lock`                                                 | Update the lockfile          |
 
 ## Notes
 
