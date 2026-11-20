@@ -7,7 +7,7 @@ Install the following before setting up the project:
 - **Python** — version specified in `pyproject.toml`
 - **uv** — Python package and project manager by Astral
 - **Git**
-- **MySQL** — or the database configured for this project
+- **Postgre** — or the database configured for this project
 
 ## 1. Clone the Repository
 
@@ -56,7 +56,8 @@ Update `.env` with your local configuration:
 
 ```env
 SECRET_KEY=replace-with-a-secret-key
-DATABASE_URL=mysql+pymysql://username:password@localhost:3306/database_name
+DATABASE_URL=postgresql+asyncpg://username:password@localhost:3306/database_name
+SYNC_DATABASE_URL=postgresql+psycopg://username:password@localhost:3306/database_name
 COOKIE_SECURE=false
 ```
 
