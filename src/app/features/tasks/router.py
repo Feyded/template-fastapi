@@ -13,23 +13,22 @@ router = APIRouter(
     prefix="/tasks", tags=["Tasks"], dependencies=[Depends(require_role(["user"]))]
 )
 
-
 @router.get("/", response_model=TaskListResponse)
-def list_tasks(
+async def list_tasks(
     db: DbSession,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
 ):
-    tasks = task_service.list_tasks(db, page, limit)
+    tasks = await task_service.list_tasks(db, page, limit)
     return {"message": "Tasks retrieved successfully", "data": tasks}
 
 
 @router.get("/{task_id}", response_model=TaskSingleResponse)
-def get_task(
+async def get_task(
     task_id: int,
     db: DbSession,
 ):
-    task = task_service.get_task(db, task_id)
+    task = await task_service.get_task(db, task_id)
 
     return {
         "message": "Task retrieved successfully",
@@ -38,8 +37,8 @@ def get_task(
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: int, db: DbSession):
-    task_service.delete_task(db, task_id)
+async def delete_task(task_id: int, db: DbSession):
+    await task_service.delete_task(db, task_id)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -47,8 +46,8 @@ def delete_task(task_id: int, db: DbSession):
 @router.post(
     "/", response_model=TaskSingleResponse, status_code=status.HTTP_201_CREATED
 )
-def create_task(payload: TaskCreate, db: DbSession, current_user: CurrentUser):
-    task = task_service.create_task(db, payload, current_user)
+async def create_task(payload: TaskCreate, db: DbSession, current_user: CurrentUser):
+    task = await task_service.create_task(db, payload, current_user.id)
 
     return {
         "message": "Task created successfully",
@@ -60,13 +59,13 @@ def create_task(payload: TaskCreate, db: DbSession, current_user: CurrentUser):
     "/{task_id}",
     response_model=TaskSingleResponse,
 )
-def update_task(
+async def update_task(
     task_id: int,
     payload: TaskUpdate,
     db: DbSession,
 ):
 
-    updated_task = task_service.update_task(
+    updated_task = await task_service.update_task(
         db,
         task_id,
         payload,

@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.exceptions import ConflictError, NotFoundError
@@ -7,14 +7,14 @@ from app.features.users.model import User
 from app.features.users.schemas import UserCreate
 
 
-def list_users(db: Session, page: int = 1, limit: int = 10) -> list[User]:
+async def list_users(db: AsyncSession, page: int = 1, limit: int = 10) -> list[User]:
     offset = (page - 1) * limit
     statement = select(User).offset(offset).limit(limit)
-    return db.scalars(statement).all()
+    return (await db.scalars(statement)).all()
 
 
-def get_user(db: Session, user_id: int) -> User:
-    user = db.get(User, user_id)
+async def get_user(db: AsyncSession, user_id: int) -> User:
+    user = await db.get(User, user_id)
 
     if user is None:
         raise NotFoundError("User not found.")
@@ -22,8 +22,8 @@ def get_user(db: Session, user_id: int) -> User:
     return user
 
 
-def create_user(db: Session, payload: UserCreate) -> User:
-    existing_user = db.scalar(select(User).where(User.email == payload.email))
+async def create_user(db: AsyncSession, payload: UserCreate) -> User:
+    existing_user = await db.scalar(select(User).where(User.email == payload.email))
 
     if existing_user is not None:
         raise ConflictError("A user with this email already exists.")
@@ -33,8 +33,8 @@ def create_user(db: Session, payload: UserCreate) -> User:
 
     user = User(**user_data)
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.add(user)
+    await db.commit()
+    await db.refresh(user)
 
     return user

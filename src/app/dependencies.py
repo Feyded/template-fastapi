@@ -3,7 +3,7 @@ from typing import Annotated
 import jwt
 from fastapi import Depends
 from jwt.exceptions import InvalidTokenError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import ALGORITHM, AccessToken
@@ -11,10 +11,9 @@ from app.core.settings import settings
 from app.exceptions import ForbiddenError, UnauthorizedError
 from app.features.users.model import User
 
-DbSession = Annotated[Session, Depends(get_db)]
+DbSession = Annotated[AsyncSession, Depends(get_db)]
 
-
-def get_current_user(
+async def get_current_user(
     token: AccessToken,
     db: DbSession,
 ) -> User:
@@ -36,7 +35,7 @@ def get_current_user(
     except InvalidTokenError, TypeError, ValueError:
         raise UnauthorizedError("Could not validate credentials")
 
-    user = db.get(User, user_id)
+    user = await db.get(User, user_id)
 
     if user is None:
         raise UnauthorizedError("Could not validate credentials")

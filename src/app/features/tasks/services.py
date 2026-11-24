@@ -1,77 +1,59 @@
-from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import CurrentUser
-from app.exceptions import ConflictError, NotFoundError
+from app.exceptions import NotFoundError
+from app.features.tasks import repository
 from app.features.tasks.model import Task
 from app.features.tasks.schemas import TaskCreate, TaskUpdate
 
 
-def list_tasks(db: Session, page: int, limit: int) -> list[Task]:
-    offset = (page - 1) * limit
-    statement = (
-        select(Task).options(selectinload(Task.user)).offset(offset).limit(limit)
+async def list_tasks(db: AsyncSession, page, limit):
+    return await repository.get_all(db, page, limit)
+
+async def create_task(
+    db: AsyncSession,
+    payload: TaskCreate,
+    user_id,
+):
+    task = Task(
+        title=payload.title,
+        description=payload.description,
+        user_id=user_id,
     )
-    return db.scalars(statement).all()
 
+    task = await repository.create(db, task)
 
-def get_task(db: Session, task_id: int) -> Task | None:
-    task = db.get(Task, task_id)
-
-    if task is None:
-        raise NotFoundError("Task not found.")
+    await db.commit()
 
     return task
 
 
-def create_task(db: Session, task_data: TaskCreate, current_user: CurrentUser) -> Task:
+async def update_task(
+    db: AsyncSession,
+    task_id,
+    payload: TaskUpdate,
+    user_id,
+):
+    task = await repository.get_by_id(db, task_id, user_id)
 
-    existing_task_id = db.scalar(select(Task.id).where(Task.title == task_data.title))
-
-    if existing_task_id is not None:
-        raise ConflictError("A task with this title already exists.")
-
-    new_task = Task(
-        **task_data.model_dump(exclude_unset=True),
-        status="pending",
-        user_id=current_user.id,
-    )
-
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
-    return new_task
-
-
-def update_task(
-    db: Session,
-    task_id: int,
-    task_data: TaskUpdate,
-) -> Task | None:
-    task = db.get(Task, task_id)
-
-    if task is None:
+    if not task:
         raise NotFoundError("Task not found")
 
-    update_data = task_data.model_dump(exclude_unset=True)
-
-    for field, value in update_data.items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(task, field, value)
 
-    db.commit()
-    db.refresh(task)
+    task = await repository.update(db, task)
+
+    await db.commit()
 
     return task
 
 
-def delete_task(db: Session, task_id: int) -> Task | None:
-    task = db.get(Task, task_id)
+async def delete_task(db: AsyncSession, task_id, user_id):
+    task = await repository.get_by_id(db, task_id, user_id)
 
-    if task is None:
+    if not task:
         raise NotFoundError("Task not found")
 
-    db.delete(task)
+    await repository.delete(db, task)
 
-    db.commit()
-
-    return task
+    await db.commit()

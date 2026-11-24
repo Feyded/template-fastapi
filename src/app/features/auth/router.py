@@ -11,13 +11,13 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/login", response_model=LoginResponse)
 @limiter.limit("5/minute")
-def login(
+async def login(
     request: Request,
     response: Response,
     payload: UserLogin,
     db: DbSession,
 ):
-    user, token = auth_service.login_user(db, payload)
+    user, token = await auth_service.login_user(db, payload)
 
     response.set_cookie(
         key="access_token",

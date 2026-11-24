@@ -7,8 +7,8 @@ from app.features.auth.schemas import UserLogin
 from app.features.users.model import User
 
 
-def login_user(db: Session, payload: UserLogin) -> tuple[User, str]:
-    user = db.scalar(select(User).where(User.email == payload.email))
+async def login_user(db: Session, payload: UserLogin) -> tuple[User, str]:
+    user = await db.scalar(select(User).where(User.email == payload.email))
 
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise UnauthorizedError("Invalid email or password")
